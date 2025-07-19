@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparador de Precios</title>
+  <meta name="theme-color" content="#3b82f6">
+  <meta name="description" content="Aplicación para comparar precios de productos entre cuatro proveedores.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="container mx-auto p-4 bg-white rounded-lg shadow-lg max-w-full">
+    <h1 class="text-xl font-bold text-center mb-4">Comparador de Precios</h1>
+    <div id="productForm" class="mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-2 mb-4">
+        <input id="productName" type="text" placeholder="Nombre del Producto" class="border p-2 rounded">
+        <input id="priceA" type="number" step="0.01" placeholder="Precio Proveedor A" class="border p-2 rounded">
+        <input id="priceB" type="number" step="0.01" placeholder="Precio Proveedor B" class="border p-2 rounded">
+        <input id="priceC" type="number" step="0.01" placeholder="Precio Proveedor C" class="border p-2 rounded">
+        <input id="priceD" type="number" step="0.01" placeholder="Precio Proveedor D" class="border p-2 rounded">
+        <button onclick="addProduct()" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Agregar</button>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-sm">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="border p-2">Producto</th>
+            <th class="border p-2">Proveedor A</th>
+            <th class="border p-2">Proveedor B</th>
+            <th class="border p-2">Proveedor C</th>
+            <th class="border p-2">Proveedor D</th>
+            <th class="border p-2">Diferencia (Máx - Mín)</th>
+            <th class="border p-2">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    let products = [];
+
+    function addProduct() {
+      const name = document.getElementById('productName').value;
+      const priceA = parseFloat(document.getElementById('priceA').value) || 0;
+      const priceB = parseFloat(document.getElementById('priceB').value) || 0;
+      const priceC = parseFloat(document.getElementById('priceC').value) || 0;
+      const priceD = parseFloat(document.getElementById('priceD').value) || 0;
+
+      if (name && (priceA || priceB || priceC || priceD)) {
+        products.push({ name, priceA, priceB, priceC, priceD });
+        document.getElementById('productName').value = '';
+        document.getElementById('priceA').value = '';
+        document.getElementById('priceB').value = '';
+        document.getElementById('priceC').value = '';
+        document.getElementById('priceD').value = '';
+        renderTable();
+      } else {
+        alert('Por favor, ingresa el nombre del producto y al menos un precio válido.');
+      }
+    }
+
+    function deleteProduct(index) {
+      products.splice(index, 1);
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('productTable');
+      tbody.innerHTML = '';
+      products.forEach((product, index) => {
+        const prices = [product.priceA, product.priceB, product.priceC, product.priceD].filter(p => p > 0);
+        const maxPrice = Math.max(...prices);
+        const minPrice = Math.min(...prices);
+        const difference = (maxPrice - minPrice).toFixed(2);
+        const row = `
+          <tr>
+            <td class="border p-2">${product.name}</td>
+            <td class="border p-2">${product.priceA ? '$' + product.priceA.toFixed(2) : '-'}</td>
+            <td class="border p-2">${product.priceB ? '$' + product.priceB.toFixed(2) : '-'}</td>
+            <td class="border p-2">${product.priceC ? '$' + product.priceC.toFixed(2) : '-'}</td>
+            <td class="border p-2">${product.priceD ? '$' + product.priceD.toFixed(2) : '-'}</td>
+            <td class="border p-2 ${difference > 0 ? 'text-red-500' : 'text-gray-500'}">
+              $${difference}
+            </td>
+            <td class="border p-2">
+              <button onclick="deleteProduct(${index})" class="bg-red-500 text-white p-1 rounded hover:bg-red-600">Eliminar</button>
+            </td>
+          </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    // Registrar el Service Worker para habilitar la PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registrado'))
+          .catch(err => console.log('Error al registrar Service Worker:', err));
+      });
+    }
+  </script>
+</body>
+</html>
